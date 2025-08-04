@@ -101,14 +101,42 @@ services:
 #    ports:
 #      - "8101:6379"
 #    volumes:
-#      - redis_data:/data
+#      - redis_octo_data:/data
 #      - ./additional_data/redis.conf:/usr/local/etc/redis/redis.conf
 #    command: redis-server /usr/local/etc/redis/redis.conf
+
+  debezium-connect:
+    image: quay.io/strimzi/kafka:0.46.0-kafka-4.0.0
+    container_name: debezium-connect
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=connect-cluster
+      - OFFSET_STORAGE_TOPIC=connect-offsets
+      - CONFIG_STORAGE_TOPIC=connect-configs
+      - STATUS_STORAGE_TOPIC=connect-status
+      - KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - KEY_CONVERTER_SCHEMAS_ENABLE=true
+      - VALUE_CONVERTER_SCHEMAS_ENABLE=true
+      - SASL_MECHANISM=PLAIN
+      - SECURITY_PROTOCOL=SASL_SSL
+      - SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required username="user1" password="${KAFKA_CLIENT_PASSWORD}";
+    volumes:
+      - ./kafka-pem-crt:/opt/kafka/certs:ro
+    depends_on:
+      - kafka
+    networks:
+      - kafka-network
+      - 
+#    volumes:
+#      - connect_octo_data:/bitnami/kafka
 
 volumes:
   kafka_octo_data:
     name: kafka_octo_data
-#  redis_data:
-#    name: redis_data
+#  redis_octo_data:
+#    name: redis_octo_data
+  connect_octo_data:
+    name: connect_octo_data
   postgres_octo_data:
     name: postgres_octo_data
